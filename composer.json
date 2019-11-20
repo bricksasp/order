@@ -1,0 +1,24 @@
+{
+    "name": "bricksasp/order",
+    "description": "bricksasp order模块",
+    "keywords": ["yii2", "order"],
+    "type": "yii2-extension",
+    "support": {
+        "issues": "https://github.com/bricksasp/order/issues",
+        "source": "https://github.com/bricksasp/order"
+    },
+    "authors": [
+        {
+            "name": "bricksasp",
+            "email": "649909457@qq.com"
+        }
+    ],
+    "require": {
+        "bricksasp/base": "~1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "bricksasp\\order\\": ""
+        }
+    }
+}
