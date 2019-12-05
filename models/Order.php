@@ -138,6 +138,11 @@ class Order extends \bricksasp\base\BaseActiveRecord
         return $this->hasMany(File::className(), ['id' => 'image_id'])->via('items')->select(['id', 'file_url'])->asArray();
     }
 
+    public function getLogistics()
+    {
+        return $this->hasOne(LogisticsCompany::className(), ['id' => 'logistics_id'])->asArray();
+    }
+
     public function userShipArea()
     {
         $model = new Region();
