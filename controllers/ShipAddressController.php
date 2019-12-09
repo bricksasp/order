@@ -49,7 +49,7 @@ class ShipAddressController extends BaseController
 
     /**
      * Displays a single ShipAddress model.
-     * @OA\Get(path="/ship-address/view",
+     * @OA\Get(path="/order/ship-address/view",
      *   summary="收货地址详情",
      *   tags={"order模块"},
      *   @OA\Parameter(
@@ -102,7 +102,7 @@ class ShipAddressController extends BaseController
 
     /**
      * Creates a new ShipAddress model.
-     * @OA\Post(path="/ship-address/create",
+     * @OA\Post(path="/order/ship-address/create",
      *   summary="添加收货地址",
      *   tags={"order模块"},
      *   @OA\Parameter(
@@ -170,7 +170,7 @@ class ShipAddressController extends BaseController
 
     /**
      * Updates an existing ShipAddress model.
-     * @OA\Post(path="/ship-address/update",
+     * @OA\Post(path="/order/ship-address/update",
      *   summary="更新收货地址",
      *   tags={"order模块"},
      *   @OA\Parameter(

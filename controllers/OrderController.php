@@ -42,7 +42,7 @@ class OrderController extends BaseController {
 	/**
 	 * Lists all Order models.
 	 * 
-	 * @OA\Get(path="/order/index",
+	 * @OA\Get(path="/order/order/index",
 	 *   summary="订单列表",
 	 *   tags={"order模块"},
 	 *   @OA\Parameter(
@@ -132,7 +132,7 @@ class OrderController extends BaseController {
 
 	/**
 	 * Displays a single Order model.
-	 * @OA\Post(path="/order/view",
+	 * @OA\Get(path="/order/order/view",
 	 *   summary="订单详情",
 	 *   tags={"order模块"},
 	 *   @OA\Parameter(
@@ -289,7 +289,7 @@ class OrderController extends BaseController {
 
 	/**
 	 * Creates a new Order model.
-	 * @OA\Post(path="/order/create",
+	 * @OA\Post(path="/order/order/create",
 	 *   summary="下单,购物车参数-单品参数二选一",
 	 *   tags={"order模块"},
 	 *   @OA\Parameter(

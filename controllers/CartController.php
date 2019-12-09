@@ -35,7 +35,7 @@ class CartController extends BaseController
 
     /**
      * Lists all Cart models.
-     * @OA\Get(path="/cart/index",
+     * @OA\Get(path="/order/cart/index",
      *   summary="购物车列表",
      *   tags={"order模块"},
      *   @OA\Parameter(
@@ -102,7 +102,7 @@ class CartController extends BaseController
 
     /**
      * Creates a new Cart model.
-     * @OA\Post(path="/cart/add",
+     * @OA\Post(path="/order/cart/add",
      *   summary="添加购物车",
      *   tags={"order模块"},
      *   @OA\Parameter(
@@ -168,7 +168,7 @@ class CartController extends BaseController
 
     /**
      * Deletes an existing Cart model.
-     * @OA\Post(path="/cart/delete",
+     * @OA\Post(path="/order/cart/delete",
      *   summary="删除购物车",
      *   tags={"order模块"},
      *   @OA\Parameter(

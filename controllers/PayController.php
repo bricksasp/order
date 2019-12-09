@@ -36,7 +36,7 @@ class PayController extends BaseController {
 
 	/**
 	 * 获取支付参数
-	 * @OA\Post(path="/pay/params",
+	 * @OA\Post(path="/order/pay/params",
 	 *   summary="获取支付参数",
 	 *   tags={"order模块"},
 	 *   @OA\Parameter(
