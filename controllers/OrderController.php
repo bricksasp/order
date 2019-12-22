@@ -337,18 +337,20 @@ class OrderController extends BaseController {
 	 *         @OA\Property(
 	 *           description="收货地址id",
 	 *           property="ship_id",
-	 *           type="string"
+	 *           type="integer",
+	 *           example=1
 	 *         ),
 	 *         @OA\Property(
 	 *           description="是否开发票 1=不发票 2=个人发票 3=公司发票",
 	 *           property="tax_type",
 	 *           type="string",
-	 *           default="1"
+	 *           example="1"
 	 *         ),
 	 *         @OA\Property(
 	 *           description="备注",
 	 *           property="memo",
-	 *           type="string"
+	 *           type="string",
+	 *           example="备注信息"
 	 *         ),
 	 *         @OA\Property(
 	 *           description="优惠券",
@@ -382,7 +384,8 @@ class OrderController extends BaseController {
 	 *         @OA\Property(
 	 *           description="支付类型",
 	 *           property="order_type",
-	 *           type="string"
+	 *           type="string",
+	 *           example="lite",
 	 *         )
 	 *       )
 	 *     )

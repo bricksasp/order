@@ -56,7 +56,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
             [['coupon'], 'string', 'max' => 5000],
             [['id'], 'unique'],
             [['pay_status', 'ship_status', 'order_status', 'confirm', 'status'], 'default', 'value' => 1],
-            [['ip', 'default', 'value' => Tools::client_ip()]]
+            [['ip'], 'default', 'value' => Tools::client_ip()]
         ];
     }
 
