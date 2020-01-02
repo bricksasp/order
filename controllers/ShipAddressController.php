@@ -53,7 +53,7 @@ class ShipAddressController extends BaseController
      *   summary="收货地址详情",
      *   tags={"order模块"},
      *   @OA\Parameter(
-     *     description="用户请求token",
+     *     description="登录凭证",
      *     name="X-Token",
      *     in="header",
      *     required=true,
@@ -106,7 +106,7 @@ class ShipAddressController extends BaseController
      *   summary="添加收货地址",
      *   tags={"order模块"},
      *   @OA\Parameter(
-     *     description="用户请求token",
+     *     description="登录凭证",
      *     name="X-Token",
      *     in="header",
      *     required=true,
@@ -174,7 +174,7 @@ class ShipAddressController extends BaseController
      *   summary="更新收货地址",
      *   tags={"order模块"},
      *   @OA\Parameter(
-     *     description="用户请求token",
+     *     description="登录凭证",
      *     name="X-Token",
      *     in="header",
      *     required=true,

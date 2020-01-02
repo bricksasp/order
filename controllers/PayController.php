@@ -40,7 +40,7 @@ class PayController extends BaseController {
 	 *   summary="获取支付参数",
 	 *   tags={"order模块"},
 	 *   @OA\Parameter(
-	 *     description="用户请求token,登录后填写",
+	 *     description="登录凭证",
 	 *     name="X-Token",
 	 *     in="header",
 	 *     required=true,

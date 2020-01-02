@@ -46,7 +46,7 @@ class OrderController extends BaseController {
 	 *   summary="订单列表",
 	 *   tags={"order模块"},
 	 *   @OA\Parameter(
-	 *     description="开启平台功能后，访问商户对应的数据标识，未开启忽略此参数",
+	 *     description="登录凭证",
 	 *     name="X-Token",
 	 *     in="header",
      *     required=true,
@@ -136,7 +136,7 @@ class OrderController extends BaseController {
 	 *   summary="订单详情",
 	 *   tags={"order模块"},
 	 *   @OA\Parameter(
-	 *     description="用户请求token",
+	 *     description="登录凭证",
 	 *     name="X-Token",
 	 *     in="header",
 	 *     required=true,
@@ -293,7 +293,7 @@ class OrderController extends BaseController {
 	 *   summary="下单,购物车参数-单品参数二选一",
 	 *   tags={"order模块"},
 	 *   @OA\Parameter(
-	 *     description="用户请求token",
+	 *     description="登录凭证",
 	 *     name="X-Token",
 	 *     in="header",
 	 *     required=true,

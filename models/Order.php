@@ -12,6 +12,9 @@ use bricksasp\base\models\Region;
  */
 class Order extends \bricksasp\base\BaseActiveRecord
 {
+    const ORDER_IS_COMMENT = 2; //已评论
+    const ORDER_NO_COMMENT = 1; //未评论
+
     /**
      * {@inheritdoc}
      */
