@@ -279,9 +279,10 @@ class OrderController extends BaseController {
 	 * )
 	 */
 	public function actionView() {
-		$model = Order::find()->with(['items', 'itemImages'])->where(['id' => Yii::$app->request->get('id')])->one();
+		$model = Order::find()->with(['items', 'itemImages', 'ext'])->where(['id' => Yii::$app->request->get('id')])->one();
 		$data = $model->toArray();
 		$data['items'] = $model->items;
+		$data['ext'] = $model->ext;
 		$data['imageItem'] = $model->itemImages ? Tools::format_array($model->itemImages, ['file_url' => ['implode', ['', [Config::instance()->web_url, '###']], 'array']], 2) : (object) [];
 		$data['userShipArea'] = $model->userShipArea();
 		return $this->success($data);
@@ -379,14 +380,30 @@ class OrderController extends BaseController {
 	 *         @OA\Property(
 	 *           description="支付方式 (查看获取支付参数接口)",
 	 *           property="order_code",
-	 *           type="integer"
+	 *           type="string",
+	 *           example="wechatpay",
 	 *         ),
 	 *         @OA\Property(
 	 *           description="支付类型",
 	 *           property="order_type",
 	 *           type="string",
 	 *           example="lite",
-	 *         )
+	 *         ),
+	 *         @OA\Property(
+	 *           description="拓展字段",
+	 *           property="ext",
+	 *           type="object", 
+	 *           @OA\Property(
+	 *             description="预约时间",
+	 *             property="appointment",
+	 *             type="string",
+	 *           ),
+	 *           @OA\Property(
+	 *             description="其他",
+	 *             property="qita",
+	 *             type="string",
+	 *           )
+	 *         ),
 	 *       )
 	 *     )
 	 *   ),
@@ -416,7 +433,7 @@ class OrderController extends BaseController {
 					$payData['money'] = $model->pay_amount;
 					$payData['owner_id'] = $this->ownerId;
 					$payData['user_id'] = $this->uid;
-					$res = PlaceOrder::newBill(ucfirst(str_replace('pay', '', $param['order_code'])), $param['order_type'], $payData);
+					$res = PlaceOrder::newBill(ucfirst(str_replace('pay', '', $parmas['order_code'])), $parmas['order_type'], $payData);
 					return $res ? $this->success($res) : $this->fail(PlaceOrder::$error);
 				}
 				return $this->fail($vtro->errors);

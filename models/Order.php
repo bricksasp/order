@@ -146,6 +146,11 @@ class Order extends \bricksasp\base\BaseActiveRecord
         return $this->hasOne(LogisticsCompany::className(), ['id' => 'logistics_id'])->asArray();
     }
 
+    public function getExt()
+    {
+        return $this->hasMany(OrderExt::className(), ['order_id' => 'id'])->asArray();
+    }
+
     public function userShipArea()
     {
         $model = new Region();
@@ -156,6 +161,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
     {
         list($data, $orderItems) = $this->formatData($data);
         $this->load($data);
+        // print_r($data);exit;
         $transaction = self::getDb()->beginTransaction();
         try {
             $this->save();
@@ -167,10 +173,26 @@ class Order extends \bricksasp\base\BaseActiveRecord
             foreach ($orderItems as $k => $product) {
                 $product['order_id']    = $this->id;
                 $model = new OrderItem();
-                $model->load($product,'');
+                $model->load($product);
                 $model->save();
             }
-            Cart::deleteAll(['id'=>$data['cart']]);
+            if (!empty($data['cart'])) {
+                Cart::deleteAll(['id'=>$data['cart']]);
+            }
+            if (!empty($data['ext'])) {
+                $fields = [];
+                foreach ($data['ext'] as $field => $val) {
+                    $f['order_id'] = $this->id;
+                    $f['order_type'] = $this->type;
+                    $f['field'] = $field;
+                    $f['val'] = $val;
+                    $fields[] = $f;
+                }
+                self::getDb()->createCommand()
+                ->batchInsert(OrderExt::tableName(),['order_id','order_type','field','val'],$fields)
+                ->execute();
+            }
+
             $transaction->commit();
             return true;
         } catch(\Exception $e) {
@@ -235,6 +257,10 @@ class Order extends \bricksasp\base\BaseActiveRecord
             $data['ship_phone'] = $shipAdr->phone;
         }
 
+        // 优惠处理
+        
+
+        
         return [$data, $orderItems];
     }
 
