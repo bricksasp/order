@@ -11,6 +11,7 @@ use bricksasp\order\models\OrderSearch;
 use bricksasp\payment\models\PlaceOrder;
 use Yii;
 use yii\web\HttpException;
+use bricksasp\base\models\File;
 
 /**
  * OrderController implements the CRUD actions for Order model.
@@ -282,9 +283,16 @@ class OrderController extends BaseController {
 		$model = Order::find()->with(['items', 'itemImages', 'ext'])->where(['id' => Yii::$app->request->get('id')])->one();
 		$data = $model->toArray();
 		$data['items'] = $model->items;
-		$data['ext'] = $model->ext;
 		$data['imageItem'] = $model->itemImages ? Tools::format_array($model->itemImages, ['file_url' => ['implode', ['', [Config::instance()->web_url, '###']], 'array']], 2) : (object) [];
 		$data['userShipArea'] = $model->userShipArea();
+		foreach ($model->ext as $item) {
+			if ($item['field'] == 'images') {
+				$image_ids = json_decode($item['val'], true);
+				$images = File::find()->select(['file_url'])->where(['id'=>$image_ids])->asArray()->all();
+				$item['val'] = $images ? Tools::format_array($images, ['file_url' => ['implode', ['', [Config::instance()->web_url, '###']], 'array']], 2) : (object) [];
+			}
+			$data['ext'][$item['field']] = $item['val'];
+		}
 		return $this->success($data);
 	}
 
@@ -399,8 +407,20 @@ class OrderController extends BaseController {
 	 *             type="string",
 	 *           ),
 	 *           @OA\Property(
-	 *             description="其他",
-	 *             property="qita",
+	 *             description="图片",
+	 *             property="images",
+	 *             type="array", @OA\Items(
+	 *               @OA\Property(
+	 *             	 description="多个image_id",
+	 *                 property="image_id",
+	 *                 type="integer"
+	 *               ),
+	 *               example=1112233,
+	 *			   )
+	 *           ),
+	 *           @OA\Property(
+	 *             description="文字信息",
+	 *             property="content",
 	 *             type="string",
 	 *           )
 	 *         ),

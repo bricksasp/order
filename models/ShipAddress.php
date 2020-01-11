@@ -64,23 +64,41 @@ class ShipAddress extends \bricksasp\base\BaseActiveRecord
         ];
     }
 
-    public function getProvince()
+    public $deep = 3;
+    /**
+     * 三级城市
+     * @return array
+     */
+    public function getProvince_3()
     {
-        return $this->hasOne(Region::className(), ['id' => 'parent_id'])->via('city')->select(['id', 'parent_id']);
+        return $this->hasOne(Region::className(), ['id' => 'parent_id'])->via('city')->asArray();
+    }
+
+    /**
+     * 四级城市
+     * @return array
+     */
+    public function getProvince_4()
+    {
+        $this->deep = 4;
+        return $this->hasOne(Region::className(), ['id' => 'parent_id'])->via('city')->asArray();
     }
 
     public function getCity()
     {
-        return $this->hasOne(Region::className(), ['id' => 'parent_id'])->via('area')->select(['id', 'parent_id']);
+        return $this->hasOne(Region::className(), ['id' => 'parent_id'])->via('area')->asArray();
     }
 
     public function getArea()
     {
-        return $this->hasOne(Region::className(), ['id' => 'parent_id'])->via('town')->select(['id', 'parent_id']);
+        if ($this->deep == 4) {
+            return $this->hasOne(Region::className(), ['id' => 'parent_id'])->via('town')->asArray();
+        }
+        return $this->hasOne(Region::className(), ['id' => 'area_id'])->asArray();
     }
 
     public function getTown()
     {
-        return $this->hasOne(Region::className(), ['id' => 'area_id'])->select(['id', 'parent_id']);
+        return $this->hasOne(Region::className(), ['id' => 'area_id'])->asArray();
     }
 }

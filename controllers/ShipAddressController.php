@@ -33,18 +33,66 @@ class ShipAddressController extends BaseController
     /**
      * Lists all ShipAddress models.
      * @return mixed
+     * 
+     * @OA\Get(path="/order/ship-address/index",
+     *   summary="收货地址列表",
+     *   tags={"order模块"},
+     *   @OA\Parameter(
+     *     description="登录凭证",
+     *     name="X-Token",
+     *     in="header",
+     *     required=true,
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   
+     *   @OA\Response(
+     *     response=200,
+     *     description="返回数据",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/shipAddressList"),
+     *     ),
+     *   ),
+     * )
+     *
+     * @OA\Schema(
+     *   schema="shipAddressList",
+     *   description="地区树结构",
+     *   allOf={
+     *     @OA\Schema(
+     *       @OA\Property(property="id", type="integer", description="收货地址id"),
+     *       @OA\Property(property="detail", type="string", description="详细地址"),
+     *       @OA\Property(property="name", type="string", description="收货人"),
+     *       @OA\Property(property="phone", type="integer", description="收货电话"),
+     *       @OA\Property(property="is_def", type="integer", description="是否默认地址1是2否"),
+     *       @OA\Property(property="area", description="是否默认地址1是2否", ref="#/components/schemas/regionData"),
+     *
+     * 
+     *     )
+     *   }
+     * )
+     * 
+     * @OA\Schema(
+     *   schema="regionData",
+     *   description="地区树结构",
+     *   allOf={
+     *     @OA\Schema(
+     *       @OA\Property(property="id", type="integer", description="地区id"),
+     *       @OA\Property(property="code", type="integer", description="编码"),
+     *       @OA\Property( property="name", type="string", description="区域名称"),
+     *       @OA\Property( property="parent_id", type="integer", description="上级id"),
+     *     )
+     *   }
+     * )
+     * 
      */
     public function actionIndex()
     {
-        $dataProvider = new ActiveDataProvider([
-            'query' => ShipAddress::find(),
-            'pagination' => [
-                'pageSize' => $params['pageSize'] ?? 10,
-            ],
-        ]);
-
-        return $this->pageFormat($dataProvider, [
-        ]);
+        $data = ShipAddress::find()->with(['province_3'])->where(['user_id' => $this->uid])->asArray()->all();
+        // print_r($data[0]);exit();
+        return $this->success($data);
     }
 
     /**

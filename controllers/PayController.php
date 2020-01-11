@@ -1,9 +1,6 @@
 <?php
 namespace bricksasp\order\controllers;
 
-use Payment\Client\Notify;
-use Payment\Common\PayException;
-use Payment\Config;
 use bricksasp\base\BaseController;
 use bricksasp\order\models\FormValidate;
 use bricksasp\order\models\Order;

@@ -185,7 +185,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
                     $f['order_id'] = $this->id;
                     $f['order_type'] = $this->type;
                     $f['field'] = $field;
-                    $f['val'] = $val;
+                    $f['val'] = is_array($val) ? json_encode($val) : $val;
                     $fields[] = $f;
                 }
                 self::getDb()->createCommand()
