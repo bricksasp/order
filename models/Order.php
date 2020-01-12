@@ -14,6 +14,8 @@ class Order extends \bricksasp\base\BaseActiveRecord
 {
     const ORDER_IS_COMMENT = 2; //已评论
     const ORDER_NO_COMMENT = 1; //未评论
+    const ORDER_TYPE_DEFAULT = 1; // 默认类型
+    const ORDER_TYPE_LONGTERM = 3; // 长期订单
 
     /**
      * {@inheritdoc}
@@ -58,7 +60,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
             [['tax_content', 'promotion_info', 'memo', 'mark'], 'string', 'max' => 255],
             [['coupon'], 'string', 'max' => 5000],
             [['id'], 'unique'],
-            [['pay_status', 'ship_status', 'order_status', 'confirm', 'status'], 'default', 'value' => 1],
+            [['pay_status', 'ship_status', 'order_status', 'confirm', 'status', 'type'], 'default', 'value' => 1],
             [['ip'], 'default', 'value' => Tools::client_ip()]
         ];
     }

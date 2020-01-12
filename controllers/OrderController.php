@@ -380,7 +380,7 @@ class OrderController extends BaseController {
 	 *           example=2,
 	 *         ),
 	 *         @OA\Property(
-	 *           description="订单类型 1通用(默认) 2其他",
+	 *           description="订单类型 1通用(默认) 2其他 3长期订单",
 	 *           property="type",
 	 *           type="integer",
 	 *           example=1,
