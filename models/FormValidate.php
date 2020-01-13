@@ -20,7 +20,7 @@ class FormValidate extends \bricksasp\base\FormValidate
             [['order_id'], 'exist', 'targetClass'=>Order::class, 'targetAttribute' => ['order_id' => 'id']],
             [['order_code'], 'in', 'range'=> ['wechatpay', 'alipay', 'cmbpay']],
             [['order_type'], 'in', 'range'=> ['app', 'bar', 'lite', 'pub', 'qr', 'wap', 'web']],
-            [['ship_id'], 'required', 'on' => ['create_order']],
+            // [['ship_id'], 'required', 'on' => ['create_order']],
             [['cart'], 'each', 'rule' => ['integer'], 'on' => ['create_order']],
             [['products'], 'checkco', 'on' => ['create_order']],
             [['order_code', 'order_type','order_id'], 'required', 'on' => ['create_bill']],

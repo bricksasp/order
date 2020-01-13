@@ -56,6 +56,15 @@ class OrderController extends BaseController {
 	 *     )
 	 *   ),
 	 *   @OA\Parameter(
+	 *     description="订单类型",
+	 *     name="type",
+	 *     in="query",
+	 *     @OA\Schema(
+	 *       type="integer",
+	 *       default=1
+	 *     )
+	 *   ),
+	 *   @OA\Parameter(
 	 *     description="当前叶数",
 	 *     name="page",
 	 *     in="query",
@@ -380,7 +389,7 @@ class OrderController extends BaseController {
 	 *           example=2,
 	 *         ),
 	 *         @OA\Property(
-	 *           description="订单类型 1通用(默认) 2其他 3长期订单",
+	 *           description="订单类型 1通用(默认) 2充值 3长期订单 4其他",
 	 *           property="type",
 	 *           type="integer",
 	 *           example=1,

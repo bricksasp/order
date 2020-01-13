@@ -241,9 +241,9 @@ class Order extends \bricksasp\base\BaseActiveRecord
             $item['mktprice'] = $p->mktprice;
             $item['pn'] = $p->pn;
             $item['num'] = $nums[$p->id];
-            $item['amount'] = $p->price * $item['num'];
-            $item['weight'] = $p->weight * $item['num'];
-            $item['volume'] = $p->volume * $item['num'];
+            $item['amount'] = $p->price * ($item['num'] ? $item['num'] : 1);
+            $item['weight'] = $p->weight * ($item['num'] ? $item['num'] : 1);
+            $item['volume'] = $p->volume * ($item['num'] ? $item['num'] : 1);
 
             $data['order_amount'] = ($data['order_amount'] ?? 0) + $item['amount'];
             $data['total_weight'] = ($data['total_weight'] ?? 0) + $item['weight'];

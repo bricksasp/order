@@ -1,11 +1,15 @@
 <?php
 namespace bricksasp\order\controllers;
 
+use Yii;
 use bricksasp\base\BaseController;
 use bricksasp\order\models\FormValidate;
 use bricksasp\order\models\Order;
 use bricksasp\payment\models\PlaceOrder;
-use Yii;
+use bricksasp\payment\models\platform\Wechat;
+use bricksasp\payment\models\BillPay;
+use WeChat\Pay;
+use WeChat\Contracts\Tools;
 
 class PayController extends BaseController {
 	/**
@@ -15,9 +19,9 @@ class PayController extends BaseController {
 	public function allowNoLoginAction() {
 		return [
 			'payed',
-			'wx',
-			'ali',
-			'cmb',
+			'wxnotify',
+			'alinotify',
+			'cmbnotify',
 		];
 	}
 
@@ -58,12 +62,14 @@ class PayController extends BaseController {
 	 *         @OA\Property(
 	 *           description="支付方式 (wechatpay,alipay,cmbpay)",
 	 *           property="order_code",
-	 *           type="integer"
+	 *           type="string",
+	 *           default="wechatpay"
 	 *         ),
 	 *         @OA\Property(
 	 *           description="支付类型 wechatpay 对应(app:app支付,bar:刷卡支付,lite:小程序支付,pub:公众号,qr:扫码支付,wap:H5手机网站支付) alipay 对应(app:app支付,bar:刷卡支付,qr:扫码支付,wap:支付宝手机网站支付,web:电脑支付（即时到账）) cmbpay 对应(无)",
 	 *           property="order_type",
-	 *           type="string"
+	 *           type="string",
+	 *           default="lite"
 	 *         )
 	 *       )
 	 *     )
@@ -104,29 +110,45 @@ class PayController extends BaseController {
 	 * 微信支付回调
 	 * @return mixed
 	 */
-	public function actionWx() {
+	public function actionWxnotify() {
 		try {
-			//$retData = Notify::getNotifyData($type, $config);// 获取第三方的原始数据，未进行签名检查
+			// echo base64_encode(json_encode(['user_id'=>2, 'owner_id'=>1]));exit;
+			$xml = file_get_contents('php://input');
+			// Yii::info($xml);exit;
+        	$data = Tools::xml2arr($xml);
+        	$map = json_decode(base64_decode($data['attach']),true);
+        	if (!is_array($map)) {
+				return $this->asXml(['return_code' => 'FAIL', 'return_msg' => 'FAIL']);
+        	}
+			// print_r($data);
+			// exit;
+			$config = Wechat::config($map['owner_id']);
+			$wechat = \WeChat\Pay::instance($config);
 
-			$ret = Notify::run(Config::WX_CHARGE, $config, $callback); // 处理回调，内部进行了签名检查
-			return $this->asXml(['return_code' => 'SUCCESS', 'return_msg' => 'OK']);
-		} catch (PayException $e) {
-			$e->errorMessage();
+		    if (isset($data['sign']) && $wechat->getPaySign($data) === $data['sign'] && $data['return_code'] === 'SUCCESS' && $data['result_code'] === 'SUCCESS') {
+		    	Yii::info($xml);
+		        $bill = BillPay::find()->where(['payment_id' => $data['out_trade_no']])->one();
+		        $bill->status = 2;
+		        Order::updateAll(['pay_status' => 2],['id' => $bill->order_id]);
+
+		        ob_clean();
+				return $this->asXml(['return_code' => 'SUCCESS', 'return_msg' => 'OK']);
+		    }
+			return $this->asXml(['return_code' => 'FAIL', 'return_msg' => 'FAIL']);
+		} catch (Exception $e) {
+			return $this->asXml(['return_code' => 'FAIL', 'return_msg' => $e->getMessage()]);
 		}
-		return $this->asXml(['return_code' => 'FAIL', 'return_msg' => 'FAIL']);
 	}
 
 	/**
 	 * 阿里支付回调
 	 * @return mixed
 	 */
-	public function actionAli() {
+	public function actionAlinotify() {
 		try {
-			//$retData = Notify::getNotifyData($type, $config);// 获取第三方的原始数据，未进行签名检查
 
-			$ret = Notify::run(Config::ALI_CHARGE, $config, $callback); // 处理回调，内部进行了签名检查
-		} catch (PayException $e) {
-			return $e->errorMessage();
+		} catch (Exception $e) {
+			return $e->getMessage();
 		}
 
 		return $ret;
@@ -136,13 +158,11 @@ class PayController extends BaseController {
 	 * 招行支付回调
 	 * @return mixed
 	 */
-	public function actionCmb() {
+	public function actionCmbnotify() {
 		try {
-			//$retData = Notify::getNotifyData($type, $config);// 获取第三方的原始数据，未进行签名检查
 
-			$ret = Notify::run(Config::CMB_CHARGE, $config, $callback); // 处理回调，内部进行了签名检查
-		} catch (PayException $e) {
-			return $e->errorMessage();
+		} catch (Exception $e) {
+			return $e->getMessage();
 		}
 
 		return $ret;

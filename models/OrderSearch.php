@@ -21,6 +21,7 @@ class OrderSearch extends Order
         return [
             [['id', 'payment_code'], 'safe'],
             [['owner_id', 'pay_status', 'ship_status', 'order_status', 'user_id', 'type', 'source', 'is_comment', 'status', 'created_at', 'updated_at'], 'integer'],
+            [['type', 'status'], 'default', 'value' => 1]
         ];
     }
 
@@ -42,9 +43,6 @@ class OrderSearch extends Order
      */
     public function search($params)
     {
-        $map['status'] = 1;
-        $params = array_merge($params, $map);
-
         $query = Order::find();
         // add conditions that should always apply here
 
@@ -77,6 +75,7 @@ class OrderSearch extends Order
             'owner_id' => $this->owner_id,
             'source' => $this->source,
             'is_comment' => $this->is_comment,
+            'type' => $this->type,
             'status' => $this->status,
             'updated_at' => $this->updated_at,
         ]);
