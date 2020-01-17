@@ -283,6 +283,33 @@ class OrderController extends BaseController {
 	 *             ),
 	 *           )
 	 *         ),
+	 *         @OA\Property(
+	 *           description="拓展字段",
+	 *           property="ext",
+	 *           type="object", 
+	 *           @OA\Property(
+	 *             description="预约时间",
+	 *             property="appointment",
+	 *             type="string",
+	 *           ),
+	 *           @OA\Property(
+	 *             description="图片",
+	 *             property="images",
+	 *             type="array", @OA\Items(
+	 *               @OA\Property(
+	 *             	 description="多个image_id",
+	 *                 property="image_id",
+	 *                 type="integer"
+	 *               ),
+	 *               example=1112233,
+	 *			   )
+	 *           ),
+	 *           @OA\Property(
+	 *             description="文字信息",
+	 *             property="content",
+	 *             type="string",
+	 *           )
+	 *         ),
 	 *       ),
 	 *     ),
 	 *   ),

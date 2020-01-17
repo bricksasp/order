@@ -112,25 +112,21 @@ class PayController extends BaseController {
 	 */
 	public function actionWxnotify() {
 		try {
-			// echo base64_encode(json_encode(['user_id'=>2, 'owner_id'=>1]));exit;
 			$xml = file_get_contents('php://input');
-			// Yii::info($xml);exit;
         	$data = Tools::xml2arr($xml);
         	$map = json_decode(base64_decode($data['attach']),true);
         	if (!is_array($map)) {
 				return $this->asXml(['return_code' => 'FAIL', 'return_msg' => 'FAIL']);
         	}
-			// print_r($data);
-			// exit;
 			$config = Wechat::config($map['owner_id']);
 			$wechat = \WeChat\Pay::instance($config);
 
 		    if (isset($data['sign']) && $wechat->getPaySign($data) === $data['sign'] && $data['return_code'] === 'SUCCESS' && $data['result_code'] === 'SUCCESS') {
-		    	Yii::info($xml);
+				file_put_contents(Yii::getAlias('@runtime') . '/pay.log', $xml . PHP_EOL,FILE_APPEND);
 		        $bill = BillPay::find()->where(['payment_id' => $data['out_trade_no']])->one();
 		        $bill->status = 2;
 		        Order::updateAll(['pay_status' => 2],['id' => $bill->order_id]);
-
+		        $bill->save();
 		        ob_clean();
 				return $this->asXml(['return_code' => 'SUCCESS', 'return_msg' => 'OK']);
 		    }
