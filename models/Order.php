@@ -6,6 +6,7 @@ use bricksasp\base\models\File;
 use bricksasp\spu\models\Product;
 use bricksasp\helpers\Tools;
 use bricksasp\base\models\Region;
+use bricksasp\promotion\models\PromotionCoupon;
 
 /**
  * This is the model class for table "{{%order}}".
@@ -15,6 +16,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
     const ORDER_IS_COMMENT = 2; //已评论
     const ORDER_NO_COMMENT = 1; //未评论
     const ORDER_TYPE_DEFAULT = 1; // 默认类型
+    const ORDER_TYPE_RECHARGE = 2; // 充值
     const ORDER_TYPE_LONGTERM = 3; // 长期订单
 
     /**
@@ -159,9 +161,9 @@ class Order extends \bricksasp\base\BaseActiveRecord
         return $model->cascader($this->ship_area_id);
     }
 
-    public function saveData($data)
+    public function saveData($parmas)
     {
-        list($data, $orderItems) = $this->formatData($data);
+        list($data, $orderItems) = $this->formatData($parmas);
         $this->load($data);
         // print_r($data);exit;
         $transaction = self::getDb()->beginTransaction();
@@ -178,12 +180,12 @@ class Order extends \bricksasp\base\BaseActiveRecord
                 $model->load($product);
                 $model->save();
             }
-            if (!empty($data['cart'])) {
-                Cart::deleteAll(['id'=>$data['cart']]);
+            if (!empty($parmas['cart'])) {
+                Cart::deleteAll(['id'=>$parmas['cart']]);
             }
-            if (!empty($data['ext'])) {
+            if (!empty($parmas['ext'])) {
                 $fields = [];
-                foreach ($data['ext'] as $field => $val) {
+                foreach ($parmas['ext'] as $field => $val) {
                     $f['order_id'] = $this->id;
                     $f['order_type'] = $this->type;
                     $f['field'] = $field;
@@ -206,21 +208,21 @@ class Order extends \bricksasp\base\BaseActiveRecord
         }
     }
 
-
-
-
-
-    public function formatData($data)
+    /**
+     * 格式化数据
+     * @return array
+     */
+    public function formatData($parmas)
     {
         $orderItems = [];
-        if (empty($data['cart'])) {
-            if (empty($data['products'])) {
-                Tools::exceptionBreak(40002);
+        if (empty($parmas['cart'])) {
+            if (empty($parmas['products'])) {
+                Tools::exceptionBreak(Yii::t('base', 40002, '单品'));
             }
-            $pids = array_column($data['products'],'id');
-            $nums = array_column($data['products'], 'num', 'id');
+            $pids = array_column($parmas['products'],'id');
+            $nums = array_column($parmas['products'], 'num', 'id');
         }else{
-            $carts = Cart::find()->where(['id' => $data['cart']])->all();
+            $carts = Cart::find()->where(['id' => $parmas['cart']])->all();
             $pids = array_column($carts,'product_id');
             $nums = array_column($carts, 'num', 'product_id');
         }
@@ -228,7 +230,25 @@ class Order extends \bricksasp\base\BaseActiveRecord
         if (!array_filter($pids)) {
             Tools::exceptionBreak(950001);
         }
+
+        $shipAdr = ShipAddress::find()->with([])->where(['id' => $parmas['ship_id']])->one();
+        if ($shipAdr) {
+            $parmas['ship_area_id'] = $shipAdr->area_id;
+            $parmas['ship_address'] = $shipAdr->detail;
+            $parmas['ship_name'] = $shipAdr->name;
+            $parmas['ship_phone'] = $shipAdr->phone;
+        }
+
         $products = Product::find()->with(['goods'])->where(['id' => $pids])->all();
+        
+        // 计算价格 优惠券处理
+        /*$coupons = [];
+        if ($parmas['coupons']) {
+            $model = new PromotionCoupon();
+            $coupons =  $model->checkEffectiveness($parmas['coupons']);
+            // print_r($coupons);
+            // exit;
+        }*/
         foreach ($products as $p) {
 
             $item['product_id'] = $p->id;
@@ -241,6 +261,12 @@ class Order extends \bricksasp\base\BaseActiveRecord
             $item['mktprice'] = $p->mktprice;
             $item['pn'] = $p->pn;
             $item['num'] = $nums[$p->id];
+
+            // if ($coupons) {
+            //     $coupons[]
+            // }
+            // $price 
+
             $item['amount'] = $p->price * ($item['num'] ? $item['num'] : 1);
             $item['weight'] = $p->weight * ($item['num'] ? $item['num'] : 1);
             $item['volume'] = $p->volume * ($item['num'] ? $item['num'] : 1);
@@ -250,24 +276,9 @@ class Order extends \bricksasp\base\BaseActiveRecord
             $data['total_volume'] = ($data['total_volume'] ?? 0) + $item['volume'];
             $orderItems[] = $item;
         }
-        $data['pay_amount'] = $data['order_amount'];
-        $shipAdr = ShipAddress::find()->with([])->where(['id' => $data['ship_id']])->one();
-        if ($shipAdr) {
-            $data['ship_area_id'] = $shipAdr->area_id;
-            $data['ship_address'] = $shipAdr->detail;
-            $data['ship_name'] = $shipAdr->name;
-            $data['ship_phone'] = $shipAdr->phone;
-        }
+        // $data['pay_amount'] = $data['order_amount'];
 
-        // 优惠处理
-        
-
-        
         return [$data, $orderItems];
     }
-
-
-
-
 
 }

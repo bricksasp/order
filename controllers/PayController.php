@@ -10,6 +10,8 @@ use bricksasp\payment\models\platform\Wechat;
 use bricksasp\payment\models\BillPay;
 use WeChat\Pay;
 use WeChat\Contracts\Tools;
+use bricksasp\member\models\UserFund;
+use yii\db\Expression;
 
 class PayController extends BaseController {
 	/**
@@ -124,10 +126,18 @@ class PayController extends BaseController {
 		    if (isset($data['sign']) && $wechat->getPaySign($data) === $data['sign'] && $data['return_code'] === 'SUCCESS' && $data['result_code'] === 'SUCCESS') {
 				file_put_contents(Yii::getAlias('@runtime') . '/pay.log', $xml . PHP_EOL,FILE_APPEND);
 		        $bill = BillPay::find()->where(['payment_id' => $data['out_trade_no']])->one();
+		        if (!$bill || $bill->status == BillPay::PAY_STATUS_SUCCESS) {
+					return $this->asXml(['return_code' => 'FAIL', 'return_msg' => 'FAIL2']);
+		        }
 		        $bill->status = 2;
-		        Order::updateAll(['pay_status' => 2],['id' => $bill->order_id]);
+		        $order = Order::find()->where(['id' => $bill->order_id])->one();
+		        $order->pay_status = 2;
+		        if ($order->type == Order::ORDER_TYPE_RECHARGE) { //充值
+		        	$uFund = UserFund::find()->where($map)->one();
+                    $uFund = UserFund::updateAll(['amount' => (int)$uFund->amount + $bill->money],$map);
+		        }
+		        $order->save();
 		        $bill->save();
-		        ob_clean();
 				return $this->asXml(['return_code' => 'SUCCESS', 'return_msg' => 'OK']);
 		    }
 			return $this->asXml(['return_code' => 'FAIL', 'return_msg' => 'FAIL']);
