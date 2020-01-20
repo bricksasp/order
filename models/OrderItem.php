@@ -28,7 +28,6 @@ class OrderItem extends \bricksasp\base\BaseActiveRecord
             [['pn', 'gn'], 'string', 'max' => 30],
             [['name'], 'string', 'max' => 200],
             [['image_id'], 'string', 'max' => 64],
-            [['promotion_list'], 'string', 'max' => 255],
         ];
     }
 
@@ -63,7 +62,6 @@ class OrderItem extends \bricksasp\base\BaseActiveRecord
             'num' => 'Num',
             'amount' => 'Amount',
             'promotion_amount' => 'Promotion Amount',
-            'promotion_list' => 'Promotion List',
             'weight' => 'Weight',
             'volume' => 'Volume',
             'delivery_num' => 'Delivery Num',

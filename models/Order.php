@@ -3,10 +3,12 @@ namespace bricksasp\order\models;
 
 use Yii;
 use bricksasp\base\models\File;
+use bricksasp\spu\models\Goods;
 use bricksasp\spu\models\Product;
 use bricksasp\helpers\Tools;
 use bricksasp\base\models\Region;
 use bricksasp\promotion\models\PromotionCoupon;
+use bricksasp\promotion\models\PromotionConditions;
 
 /**
  * This is the model class for table "{{%order}}".
@@ -231,6 +233,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
             Tools::exceptionBreak(950001);
         }
 
+        // 收货地址
         $shipAdr = ShipAddress::find()->with([])->where(['id' => $parmas['ship_id']])->one();
         if ($shipAdr) {
             $parmas['ship_area_id'] = $shipAdr->area_id;
@@ -241,14 +244,23 @@ class Order extends \bricksasp\base\BaseActiveRecord
 
         $products = Product::find()->with(['goods'])->where(['id' => $pids])->all();
         
-        // 计算价格 优惠券处理
-        /*$coupons = [];
+        // 优惠券处理
+        $coupons = $cat_ids = [];
         if ($parmas['coupons']) {
             $model = new PromotionCoupon();
             $coupons =  $model->checkEffectiveness($parmas['coupons']);
-            // print_r($coupons);
-            // exit;
-        }*/
+
+            //商品分类
+            $goods = Goods::find()->select(['id', 'cat_id'])->where(['id' => array_map(function ($item)
+            {
+                return $item->goods_id;
+            },$products)])->asArray()->all();
+
+            $cat_ids = array_combine(array_column($goods,'id'), array_column($goods,'cat_id'));
+        }
+        
+        // print_r($cat_ids);exit;
+
         foreach ($products as $p) {
 
             $item['product_id'] = $p->id;
@@ -262,12 +274,55 @@ class Order extends \bricksasp\base\BaseActiveRecord
             $item['pn'] = $p->pn;
             $item['num'] = $nums[$p->id];
 
-            // if ($coupons) {
-            //     $coupons[]
-            // }
-            // $price 
+            // 计算单品价格 
+            $price = 0;
+            if ($coupons) {
+                // 全部商品
+                if (isset($coupons[PromotionConditions::TYPE_ALL])) {
+                    $res = $coupons[PromotionConditions::TYPE_ALL]['result'][PromotionCoupon::RESULT_GOODS_AMOUT] ?? [];
+                    if ($res) $price = $p->price - array_sum($res);
 
-            $item['amount'] = $p->price * ($item['num'] ? $item['num'] : 1);
+                    $res = $coupons[PromotionConditions::TYPE_ALL]['result'][PromotionCoupon::RESULT_GOODS_DISCOUNT] ?? [];
+                    if ($res) $price = $p->price * array_product($res) / (count($res) * 100);
+                }
+                // 商品分类
+                if (isset($coupons[PromotionConditions::TYPE_CAT])) {
+                    $res = $coupons[PromotionConditions::TYPE_CAT]['result'][PromotionCoupon::RESULT_GOODS_AMOUT] ?? [];
+                    if ($res && in_array($cat_ids[$p->goods_id], $coupons[PromotionConditions::TYPE_CAT]['content'])) {
+                        $price = $p->price - array_sum($res);
+                    }
+
+                    $res = $coupons[PromotionConditions::TYPE_CAT]['result'][PromotionCoupon::RESULT_GOODS_DISCOUNT] ?? [];
+                    if ($res && in_array($cat_ids[$p->goods_id], $coupons[PromotionConditions::TYPE_CAT]['content'])) {
+                        $price = $p->price * array_product($res) / (count($res) * 100);
+                    }
+                }
+                // 指定部分商品
+                if (isset($coupons[PromotionConditions::TYPE_PART])) {
+                    $res = $coupons[PromotionConditions::TYPE_PART]['result'][PromotionCoupon::RESULT_GOODS_AMOUT] ?? [];
+                    if ($res && in_array($p->id, $coupons[PromotionConditions::TYPE_PART]['content'])) {
+                        $price = $p->price - array_sum($res);
+                    }
+
+                    $res = $coupons[PromotionConditions::TYPE_PART]['result'][PromotionCoupon::RESULT_GOODS_DISCOUNT] ?? [];
+                    if ($res && in_array($p->id, $coupons[PromotionConditions::TYPE_PART]['content'])) {
+                        $price = $p->price * array_product($res) / (count($res) * 100);
+                    }
+
+                    $res = $coupons[PromotionConditions::TYPE_PART]['result'][PromotionCoupon::RESULT_GOODS_PRICE] ?? [];
+                    if ($res && in_array($p->id, $coupons[PromotionConditions::TYPE_PART]['content'])) {
+                        $price = $coupons[PromotionConditions::TYPE_PART]['result'][$p->id];
+                    }
+                }
+            }
+
+            if ($price){
+                $item['promotion_amount'] = $p->price - $price;
+            }else{
+                $price = $p->price;
+            }
+
+            $item['amount'] = $price * ($item['num'] ? $item['num'] : 1);
             $item['weight'] = $p->weight * ($item['num'] ? $item['num'] : 1);
             $item['volume'] = $p->volume * ($item['num'] ? $item['num'] : 1);
 
@@ -276,8 +331,31 @@ class Order extends \bricksasp\base\BaseActiveRecord
             $data['total_volume'] = ($data['total_volume'] ?? 0) + $item['volume'];
             $orderItems[] = $item;
         }
-        // $data['pay_amount'] = $data['order_amount'];
 
+        // 计算订单价格
+        if ($coupons) {
+            if (isset($coupons[PromotionConditions::TYPE_REDUCTION])) {
+                $res = $coupons[PromotionConditions::TYPE_REDUCTION]['result'][PromotionCoupon::RESULT_ORDER_AMOUT] ?? [];
+                if ($res) $data['pay_amount'] = $data['order_amount'] - array_sum($res);
+                
+                $res = $coupons[PromotionConditions::TYPE_REDUCTION]['result'][PromotionCoupon::RESULT_ORDER_DISCOUNT] ?? [];
+                if ($res) $data['pay_amount'] = $data['order_amount'] * array_product($res);
+
+                $res = $coupons[PromotionConditions::TYPE_REDUCTION]['result'][PromotionCoupon::RESULT_ORDER_PRICE] ?? [];
+                if ($res) {
+                    sort($res);
+                    $data['pay_amount'] = array_pop($res);
+                }
+            }
+        }
+        if (isset($data['pay_amount'])) {
+            $data['coupon'] = json_encode($coupons);
+        }else{
+            $data['pay_amount'] = $data['order_amount'];
+        }
+        if ($data['pay_amount'] <= 0) {
+            $data
+        }
         return [$data, $orderItems];
     }
 
