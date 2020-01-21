@@ -60,7 +60,7 @@ class OrderSearch extends Order
 
         $this->load($this->filterParma($params));
         if (!$params['data_all']) {
-            $query->select(['id','order_amount', 'pay_amount', 'pay_status', 'ship_status', 'order_status', ])->with(['itemImages']);
+            $query->select(['id','order_amount', 'pay_amount', 'pay_status', 'ship_status', 'order_status', 'created_at'])->with(['itemImages']);
         }
         if (!$this->validate()) {
             Tools::exceptionBreak(Yii::t('base',50006));

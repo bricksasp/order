@@ -138,7 +138,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
     public function getItems()
     {
         return $this->hasMany(OrderItem::className(), ['order_id' => 'id'])
-        ->select(['order_id', 'goods_id', 'image_id', 'price',])
+        ->select(['order_id', 'goods_id', 'image_id', 'price', 'name', 'brief'])
         ->asArray();
     }
 
@@ -266,6 +266,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
             $item['product_id'] = $p->id;
             $item['goods_id'] = $p->goods->id;
             $item['name'] = $p->goods->name;
+            $item['brief'] = $p->goods->brief;
             $item['image_id'] = $p->goods->image_id;
             $item['gn'] = $p->goods->gn;
             $item['price'] = $p->price;
@@ -354,7 +355,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
             $data['pay_amount'] = $data['order_amount'];
         }
         if ($data['pay_amount'] <= 0) {
-            $data
+            $data['pay_status'] = 2;
         }
         return [$data, $orderItems];
     }

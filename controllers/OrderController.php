@@ -101,6 +101,7 @@ class OrderController extends BaseController {
 	 *       @OA\Property( property="pay_status", type="integer", description="支付状态" ),
 	 *       @OA\Property( property="ship_status", type="integer", description="发货状态" ),
 	 *       @OA\Property(property="order_status", type="integer", description="订单状态"),
+	 *       @OA\Property(property="created_at", type="integer", description="创建时间"),
 	 *       @OA\Property(property="items", type="array", description="商品列表", @OA\Items(
 	 *           @OA\Property(
 	 *         	 description="商品id",
@@ -112,13 +113,23 @@ class OrderController extends BaseController {
 	 *             property="image_id",
 	 *             type="integer"
 	 *           ),
+	 *           @OA\Property(
+	 *         	 description="商品名称",
+	 *             property="name",
+	 *             type="string"
+	 *           ),
+	 *           @OA\Property(
+	 *         	 description="商品简介",
+	 *             property="brief",
+	 *             type="string"
+	 *           ),
 	 *		   )
 	 *		 ),
 	 *       @OA\Property(property="itemImages", type="array", description="商品图片", @OA\Items(
 	 *           @OA\Property(
 	 *         	 description="图片地址",
 	 *             property="file_url",
-	 *             type="integer"
+	 *             type="string"
 	 *           ),
 	 *           @OA\Property(
 	 *         	 description="图片id",
@@ -201,7 +212,7 @@ class OrderController extends BaseController {
 	 *         ),
 	 *         @OA\Property(
 	 *           description="收货详细地址",
-	 *           property="ship_address",
+	 *           property="ship_address", 'ship_name' ,
 	 *           type="string"
 	 *         ),
 	 *         @OA\Property(
@@ -227,6 +238,11 @@ class OrderController extends BaseController {
 	 *         @OA\Property(
 	 *           description="1未评论，2已评论",
 	 *           property="is_comment",
+	 *           type="integer"
+	 *         ),
+	 *         @OA\Property(
+	 *           description="创建时间",
+	 *           property="created_at",
 	 *           type="integer"
 	 *         ),
 	 *         @OA\Property(
@@ -263,6 +279,11 @@ class OrderController extends BaseController {
 	 *               description="图片id",
 	 *               property="image_id",
 	 *               type="integer"
+	 *             ),
+	 *             @OA\Property(
+	 *         	 	description="商品简介",
+	 *           	  property="brief",
+	 *           	  type="string"
 	 *             ),
 	 *           )
 	 *         ),
@@ -316,7 +337,13 @@ class OrderController extends BaseController {
 	 * )
 	 */
 	public function actionView() {
-		$model = Order::find()->with(['items', 'itemImages', 'ext'])->where(['id' => Yii::$app->request->get('id')])->one();
+		if ($this->request_entrance == Token::TOKEN_TYPE_FRONTEND) {
+			$field = ['id', 'order_amount', 'pay_amount', 'pay_status', 'ship_status', 'order_status', 'logistics_name', 'ship_address', 'ship_name', 'ship_phone', 'tax_type', 'order_pmt', 'is_comment', 'created_at' ];
+		}else{
+			$field = [];
+		}
+
+		$model = Order::find()->select($field)->with(['items', 'itemImages', 'ext'])->where(['id' => Yii::$app->request->get('id')])->one();
 		$data = $model->toArray();
 		$data['items'] = $model->items;
 		$data['imageItem'] = $model->itemImages ? Tools::format_array($model->itemImages, ['file_url' => ['implode', ['', [Config::instance()->web_url, '###']], 'array']], 2) : (object) [];

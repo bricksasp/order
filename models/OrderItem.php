@@ -26,7 +26,7 @@ class OrderItem extends \bricksasp\base\BaseActiveRecord
             [['price', 'costprice', 'mktprice', 'amount', 'promotion_amount', 'weight', 'volume'], 'number'],
             [['order_id'], 'string', 'max' => 20],
             [['pn', 'gn'], 'string', 'max' => 30],
-            [['name'], 'string', 'max' => 200],
+            [['name', 'brief'], 'string', 'max' => 255],
             [['image_id'], 'string', 'max' => 64],
         ];
     }
