@@ -212,7 +212,7 @@ class OrderController extends BaseController {
 	 *         ),
 	 *         @OA\Property(
 	 *           description="收货详细地址",
-	 *           property="ship_address", 'ship_name' ,
+	 *           property="ship_address",
 	 *           type="string"
 	 *         ),
 	 *         @OA\Property(

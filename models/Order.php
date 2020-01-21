@@ -357,6 +357,8 @@ class Order extends \bricksasp\base\BaseActiveRecord
         if ($data['pay_amount'] <= 0) {
             $data['pay_status'] = 2;
         }
+
+        $data = array_merge($parmas, $data);
         return [$data, $orderItems];
     }
 
