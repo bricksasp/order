@@ -12,6 +12,7 @@ use bricksasp\payment\models\PlaceOrder;
 use Yii;
 use yii\web\HttpException;
 use bricksasp\base\models\File;
+use bricksasp\rbac\models\redis\Token;
 
 /**
  * OrderController implements the CRUD actions for Order model.
