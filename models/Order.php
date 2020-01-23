@@ -201,9 +201,6 @@ class Order extends \bricksasp\base\BaseActiveRecord
 
             $transaction->commit();
             return true;
-        } catch(\Exception $e) {
-            $transaction->rollBack();
-            throw $e;
         } catch(\Throwable $e) {
             $transaction->rollBack();
             throw $e;

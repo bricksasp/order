@@ -5,6 +5,7 @@ use Yii;
 use bricksasp\base\BaseController;
 use bricksasp\order\models\FormValidate;
 use bricksasp\order\models\Order;
+use bricksasp\order\models\OrderItem;
 use bricksasp\payment\models\PlaceOrder;
 use bricksasp\payment\models\platform\Wechat;
 use bricksasp\payment\models\BillPay;
@@ -12,6 +13,7 @@ use WeChat\Pay;
 use WeChat\Contracts\Tools;
 use bricksasp\member\models\UserFund;
 use yii\db\Expression;
+use bricksasp\rbac\models\UserInfo;
 
 class PayController extends BaseController {
 	/**
@@ -113,37 +115,57 @@ class PayController extends BaseController {
 	 * @return mixed
 	 */
 	public function actionWxnotify() {
-		try {
-			$xml = file_get_contents('php://input');
-        	$data = Tools::xml2arr($xml);
-        	$map = json_decode(base64_decode($data['attach']),true);
-        	if (!is_array($map)) {
-				return $this->asXml(['return_code' => 'FAIL', 'return_msg' => 'FAIL']);
-        	}
-			$config = Wechat::config($map['owner_id']);
-			$wechat = \WeChat\Pay::instance($config);
+		$xml = file_get_contents('php://input');
+    	$data = Tools::xml2arr($xml);
+    	$map = json_decode(base64_decode($data['attach']),true);
+    	if (!is_array($map)) {
+			return $this->asXml(['return_code' => 'FAIL', 'return_msg' => 'FAIL']);
+    	}
+		$config = Wechat::config($map['owner_id']);
+		$wechat = \WeChat\Pay::instance($config);
 
-		    if (isset($data['sign']) && $wechat->getPaySign($data) === $data['sign'] && $data['return_code'] === 'SUCCESS' && $data['result_code'] === 'SUCCESS') {
-				file_put_contents(Yii::getAlias('@runtime') . '/pay.log', $xml . PHP_EOL,FILE_APPEND);
-		        $bill = BillPay::find()->where(['payment_id' => $data['out_trade_no']])->one();
-		        if (!$bill || $bill->status == BillPay::PAY_STATUS_SUCCESS) {
-					return $this->asXml(['return_code' => 'FAIL', 'return_msg' => 'FAIL2']);
+	    if (isset($data['sign']) && $wechat->getPaySign($data) === $data['sign'] && $data['return_code'] === 'SUCCESS' && $data['result_code'] === 'SUCCESS') {
+	        $bill = BillPay::find()->where(['payment_id' => $data['out_trade_no']])->one();
+	        if (!$bill || $bill->status == BillPay::PAY_STATUS_SUCCESS) {
+				// return $this->asXml(['return_code' => 'FAIL', 'return_msg' => 'FAIL2-' . $bill->order_id]);
+	        }
+	        $bill->status = 2;
+	        $order = Order::find()->where(['id' => $bill->order_id])->one();
+	        $order->pay_status = 2;
+	        if ($order->type == Order::ORDER_TYPE_RECHARGE) { //充值
+	        	$uFund = UserFund::find()->where($map)->one();
+                $uFund = UserFund::updateAll(['amount' => (int)$uFund->amount + $bill->money],$map);
+	        }
+
+	        if ($order->type == Order::ORDER_TYPE_LONGTERM) { //长期订单
+	        	
+	        }
+
+    		$transaction = BillPay::getDb()->beginTransaction();
+			try {
+				// 开通会员
+		        if (!empty(Yii::$app->params['fixedParameter']['goodsVip'])) {
+		        	$item = OrderItem::find()->where(['order_id' => $bill->order_id, 'goods_id' => Yii::$app->params['fixedParameter']['goodsVip']['id']])->one();
+		        	if ($item) {
+		        		$uinfo = UserInfo::find($map)->one();
+		        		$today = strtotime(date('Y-m-d', time()));
+		        		$vipNow = $uinfo->vip_time ? ($uinfo->vip_time < $today ? $today : $uinfo->vip_time) : $today;
+		        		$uinfo->vip_time = $vipNow +  Yii::$app->params['fixedParameter']['goodsVip'][$item->product_id];
+		        		$uinfo->save();
+		        	}
 		        }
-		        $bill->status = 2;
-		        $order = Order::find()->where(['id' => $bill->order_id])->one();
-		        $order->pay_status = 2;
-		        if ($order->type == Order::ORDER_TYPE_RECHARGE) { //充值
-		        	$uFund = UserFund::find()->where($map)->one();
-                    $uFund = UserFund::updateAll(['amount' => (int)$uFund->amount + $bill->money],$map);
-		        }
+
 		        $order->save();
 		        $bill->save();
+	            $transaction->commit();
+				file_put_contents(Yii::getAlias('@runtime') . '/pay.log', $xml . PHP_EOL,FILE_APPEND);
 				return $this->asXml(['return_code' => 'SUCCESS', 'return_msg' => 'OK']);
-		    }
-			return $this->asXml(['return_code' => 'FAIL', 'return_msg' => 'FAIL']);
-		} catch (Exception $e) {
-			return $this->asXml(['return_code' => 'FAIL', 'return_msg' => $e->getMessage()]);
-		}
+			} catch (Exception $e) {
+                $transaction->rollBack();
+			}
+	    }
+
+		return $this->asXml(['return_code' => 'FAIL', 'return_msg' => 'FAIL']);
 	}
 
 	/**
