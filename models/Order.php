@@ -144,17 +144,17 @@ class Order extends \bricksasp\base\BaseActiveRecord
 
     public function getItemImages()
     {
-        return $this->hasMany(File::className(), ['id' => 'image_id'])->via('items')->select(['id', 'file_url'])->asArray();
+        return $this->hasMany(File::className(), ['id' => 'image_id'])->via('items')->select(['id', 'file_url']);
     }
 
     public function getLogistics()
     {
-        return $this->hasOne(LogisticsCompany::className(), ['id' => 'logistics_id'])->asArray();
+        return $this->hasOne(LogisticsCompany::className(), ['id' => 'logistics_id']);
     }
 
     public function getExt()
     {
-        return $this->hasMany(OrderExt::className(), ['order_id' => 'id'])->asArray();
+        return $this->hasMany(OrderExt::className(), ['order_id' => 'id']);
     }
 
     public function userShipArea()
@@ -184,6 +184,10 @@ class Order extends \bricksasp\base\BaseActiveRecord
             }
             if (!empty($parmas['cart'])) {
                 Cart::deleteAll(['id'=>$parmas['cart']]);
+            }
+            // 长期订单
+            if ($this->type = self::ORDER_TYPE_LONGTERM) {
+                
             }
             if (!empty($parmas['ext'])) {
                 $fields = [];
@@ -256,8 +260,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
             $cat_ids = array_combine(array_column($goods,'id'), array_column($goods,'cat_id'));
         }
         
-        // print_r($cat_ids);exit;
-
+        // 订单单品购买处理
         foreach ($products as $p) {
 
             $item['product_id'] = $p->id;

@@ -1,10 +1,16 @@
 <?php
+
 namespace bricksasp\order\models;
 
 use Yii;
 
+/**
+ * This is the model class for table "{{%order_log}}".
+ */
 class OrderLog extends \bricksasp\base\BaseActiveRecord
 {
+    const LOG_TYPE_DEFAULT = 1; // 可清除
+    const LOG_TYPE_LONGTERM = 2; // 长期订单
     /**
      * {@inheritdoc}
      */
@@ -13,16 +19,28 @@ class OrderLog extends \bricksasp\base\BaseActiveRecord
         return '{{%order_log}}';
     }
 
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => \yii\behaviors\TimestampBehavior::className(),
+                'createdAtAttribute' => 'created_at',
+                'updatedAtAttribute' => 'updated_at',
+            ],
+        ];
+    }
+
     /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['user_id', 'type', 'created_at'], 'integer'],
+            [['parent_id', 'user_id', 'type', 'created_at', 'updated_at'], 'integer'],
+            [['data'], 'string'],
             [['order_id'], 'string', 'max' => 20],
-            [['info'], 'string', 'max' => 100],
-            [['data'], 'string', 'max' => 1000],
+            [['info'], 'string', 'max' => 255],
+            [['type'], 'default', 'value' => self::TYPE_DEFAULT]
         ];
     }
 
