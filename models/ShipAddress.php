@@ -40,6 +40,7 @@ class ShipAddress extends \bricksasp\base\BaseActiveRecord
     {
         return [
             [['user_id', 'area_id', 'is_def', 'created_at', 'updated_at'], 'integer'],
+            [['area_id', 'detail', 'name', 'phone'], 'required'],
             [['detail'], 'string', 'max' => 128],
             [['name'], 'string', 'max' => 64],
             [['phone'], 'string', 'max' => 16],

@@ -138,7 +138,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
     public function getItems()
     {
         return $this->hasMany(OrderItem::className(), ['order_id' => 'id'])
-        ->select(['order_id', 'goods_id', 'image_id', 'price', 'name', 'brief'])
+        ->select(['order_id', 'goods_id', 'image_id', 'price', 'name', 'brief', 'pn', 'num', 'amount', 'weight', 'volume', 'delivery_num'])
         ->asArray();
     }
 

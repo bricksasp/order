@@ -6,6 +6,8 @@ use bricksasp\order\models\ShipAddress;
 use yii\data\ActiveDataProvider;
 use bricksasp\base\BaseController;
 use yii\web\HttpException;
+use bricksasp\base\models\Region;
+use bricksasp\helpers\Tools;
 
 /**
  * ShipAddressController implements the CRUD actions for ShipAddress model.
@@ -188,8 +190,13 @@ class ShipAddressController extends BaseController
      *           type="integer"
      *         ),
      *         @OA\Property(
-     *           description="地区id",
+     *           description="地区id (与code二选一,area_id优先)",
      *           property="area_id",
+     *           type="integer"
+     *         ),
+     *         @OA\Property(
+     *           description="行政区划代码 (与area_id二选一,area_id优先)",
+     *           property="code",
      *           type="integer"
      *         )
      *       )
@@ -208,8 +215,12 @@ class ShipAddressController extends BaseController
     public function actionCreate()
     {
         $model = new ShipAddress();
-
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+        $data = Yii::$app->request->post();
+        if (empty($data['area_id'])) {
+            $area = Region::find()->where(['code' => $data['code']])->one();
+            $data['area_id'] = $area['id'] ?? null;
+        }
+        if ($model->load($data) && $model->save()) {
             return $this->success($model);
         }
 
