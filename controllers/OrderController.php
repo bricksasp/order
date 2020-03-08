@@ -57,7 +57,7 @@ class OrderController extends BaseController {
 	 *     )
 	 *   ),
 	 *   @OA\Parameter(
-	 *     description="订单类型",
+	 *     description="订单类型 1通用(默认) 2充值 3长期订单 4其他",
 	 *     name="type",
 	 *     in="query",
 	 *     @OA\Schema(

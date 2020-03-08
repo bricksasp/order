@@ -147,7 +147,8 @@ class ShipAddressController extends BaseController
      */
     public function actionView()
     {
-        return $this->success($this->findModel());
+        $model = $this->findModel();
+        return $this->success($this->getAreas($model));
     }
 
     /**
@@ -220,8 +221,11 @@ class ShipAddressController extends BaseController
             $area = Region::find()->where(['code' => $data['code']])->one();
             $data['area_id'] = $area['id'] ?? null;
         }
+        if ($data['is_def'] == 1) {
+            ShipAddress::updateAll(['is_def' => 2], ['user_id' => $this->uid]);
+        }
         if ($model->load($data) && $model->save()) {
-            return $this->success($model);
+            return $this->success($this->getAreas($model));
         }
 
         return $this->fail($model->errors);
@@ -303,19 +307,52 @@ class ShipAddressController extends BaseController
             $area = Region::find()->where(['code' => $data['code']])->one();
             $data['area_id'] = $area['id'] ?? null;
         }
+        if ($data['is_def'] == 1) {
+            ShipAddress::updateAll(['is_def' => 2], ['user_id' => $this->uid]);
+        }
         if ($model->load($data) && $model->save()) {
-            return $this->success($model);
+            return $this->success($this->getAreas($model));
         }
 
         return $this->fail($model->errors);
     }
 
     /**
-     * Deletes an existing ShipAddress model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param integer $id
-     * @return mixed
-     * @throws HttpException if the model cannot be found
+     * Delete an existing ShipAddress model.
+     * @OA\Post(path="/order/ship-address/delete",
+     *   summary="删除收货地址",
+     *   tags={"order模块"},
+     *   @OA\Parameter(
+     *     description="登录凭证",
+     *     name="X-Token",
+     *     in="header",
+     *     required=true,
+     *     @OA\Schema(
+     *       type="string"
+     *     )
+     *   ),
+     *   @OA\RequestBody(
+     *     required=true,
+     *     @OA\MediaType(
+     *       mediaType="multipart/form-data",
+     *       @OA\Schema(
+     *         @OA\Property(
+     *           description="收货地址id",
+     *           property="id",
+     *           type="integer"
+     *         )
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="响应结构",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/response"),
+     *     ),
+     *   ),
+     * )
      */
     public function actionDelete()
     {
@@ -338,5 +375,19 @@ class ShipAddressController extends BaseController
         }
 
         throw new HttpException('The requested page does not exist.');
+    }
+    
+    protected function getAreas($model)
+    {
+        $reg = new Region();
+        $areas = $reg->cascader($model->area_id);
+        $areas = array_column($areas, 'name');
+        if (count($areas) < 3) {
+            $areas[2] = $areas[1];
+            $areas[1] = $areas[0];
+        }
+        $res = $model->toArray();
+        $res['areas'] = $areas;
+        return $res;
     }
 }
