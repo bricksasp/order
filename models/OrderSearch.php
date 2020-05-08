@@ -59,8 +59,22 @@ class OrderSearch extends Order
         ]);
 
         $this->load($this->filterParma($params));
+
+        $fd = [
+            'order_status' => $this->order_status,
+            'ship_status' => $this->ship_status,
+            'owner_id' => $this->owner_id,
+            'source' => $this->source,
+            'is_comment' => $this->is_comment,
+            'type' => $this->type,
+            'status' => $this->status,
+            'updated_at' => $this->updated_at,
+        ];
+
         if (!$params['data_all']) {
             $query->select(['id','order_amount', 'pay_amount', 'pay_status', 'ship_status', 'order_status', 'created_at'])->with(['itemImages']);
+
+            $fd['user_id'] = $this->user_id;
         }
         if (!$this->validate()) {
             Tools::exceptionBreak(Yii::t('base',50006));
@@ -68,17 +82,7 @@ class OrderSearch extends Order
         }
 
         // grid filtering conditions
-        $query->andFilterWhere([
-            'order_status' => $this->order_status,
-            'ship_status' => $this->ship_status,
-            'user_id' => $this->user_id,
-            'owner_id' => $this->owner_id,
-            'source' => $this->source,
-            'is_comment' => $this->is_comment,
-            'type' => $this->type,
-            'status' => $this->status,
-            'updated_at' => $this->updated_at,
-        ]);
+        $query->andFilterWhere($fd);
 
         $query->andFilterWhere(['like', 'id', $this->id])
             ->andFilterWhere(['like', 'payment_code', $this->payment_code]);

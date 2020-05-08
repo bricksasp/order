@@ -8,6 +8,7 @@ use bricksasp\order\models\FormValidate;
 use bricksasp\order\models\Order;
 use bricksasp\order\models\OrderItem;
 use bricksasp\order\models\OrderSearch;
+use bricksasp\order\models\OrderExt;
 use bricksasp\payment\models\PlaceOrder;
 use Yii;
 use yii\web\HttpException;
@@ -349,13 +350,18 @@ class OrderController extends BaseController {
 		$data['items'] = $model->items;
 		$data['imageItem'] = $model->itemImages ? Tools::format_array($model->itemImages, ['file_url' => ['implode', ['', [Config::instance()->web_url, '###']], 'array']], 2) : (object) [];
 		$data['userShipArea'] = $model->userShipArea();
-		foreach ($model->ext as $item) {
-			if ($item['field'] == 'images') {
-				$image_ids = json_decode($item['val'], true);
-				$images = File::find()->select(['file_url'])->where(['id'=>$image_ids])->asArray()->all();
-				$item['val'] = $images ? Tools::format_array($images, ['file_url' => ['implode', ['', [Config::instance()->web_url, '###']], 'array']], 2) : (object) [];
+		// print_r($data);exit;
+		if ($model->ext) {
+			foreach ($model->ext as $item) {
+				if ($item['field'] == 'images') {
+					$image_ids = json_decode($item['val'], true);
+					$images = File::find()->select(['file_url'])->where(['id'=>$image_ids])->asArray()->all();
+					$item['val'] = $images ? Tools::format_array($images, ['file_url' => ['implode', ['', [Config::instance()->web_url, '###']], 'array']], 2) : (object) [];
+				}
+				$data['ext'][$item['field']] = $item['val'];
 			}
-			$data['ext'][$item['field']] = $item['val'];
+			
+			$data['ext']['appointment'] = $data['ext']['appointment'] * 1000;
 		}
 		return $this->success($data);
 	}
@@ -536,12 +542,29 @@ class OrderController extends BaseController {
 	 * @throws HttpException if the model cannot be found
 	 */
 	public function actionUpdate() {
-		$model = $this->findModel($id);
+		$id = Yii::$app->request->post('id');
 
-		if ($model->load(Yii::$app->request->post()) && $model->save()) {
-			return $this->success($model);
+        $data =	[
+			'ship_name' => Yii::$app->request->post('ship_name'),
+			'ship_phone' => Yii::$app->request->post('ship_phone'),
+			'ship_address' => Yii::$app->request->post('ship_address'),
+			'ship_area_id' => Yii::$app->request->post('ship_area_id'),
+		];
+		$ext = Yii::$app->request->post('ext');
+
+		if ($this->request_entrance == Token::TOKEN_TYPE_FRONTEND) {
+			$model = Order::find($this->dataOwnerUid())->andWhere(['id' => $id])->one();
+        }else{
+			$model = Order::find()->andWhere(['id' => $id])->one();
+			$data['pay_amount'] = Yii::$app->request->post('pay_amount');
+        }
+
+		if ($model) {
+			Order::updateAll($data, ['id' => $id]);
+			OrderExt::updateAll(['val' => $ext['appointment'] / 1000], ['order_id' => $id, 'field' => 'appointment']);
+			return $this->success();
 		}
-
+		
 		return $this->fail($model->errors);
 	}
 
@@ -593,7 +616,7 @@ class OrderController extends BaseController {
 	 * @throws HttpException if the model cannot be found
 	 */
 	protected function findModel($id) {
-		$model = Order::find($this->dataOwnerUid())->andWhere(['id' => $id])->one();
+		
 		if ($model !== null) {
 			return $model;
 		}
