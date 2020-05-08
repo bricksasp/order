@@ -58,7 +58,7 @@ class OrderSearch extends Order
             // ],
         ]);
 
-        $this->load($this->filterParma($params));
+        $this->load($params);
 
         $fd = [
             'order_status' => $this->order_status,
@@ -71,7 +71,7 @@ class OrderSearch extends Order
             'updated_at' => $this->updated_at,
         ];
 
-        if (!$params['data_all']) {
+        if (!$params['is_backend']) {
             $query->select(['id','order_amount', 'pay_amount', 'pay_status', 'ship_status', 'order_status', 'created_at'])->with(['itemImages']);
 
             $fd['user_id'] = $this->user_id;
