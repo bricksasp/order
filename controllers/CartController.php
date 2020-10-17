@@ -182,7 +182,6 @@ class CartController extends BaseController
      *   ),
      *   @OA\RequestBody(
      *     required=true,
-     *     @OA\JsonContent(ref="#/components/schemas/carts"),
      *     @OA\MediaType(
      *       mediaType="multipart/form-data",
      *       @OA\Schema(ref="#/components/schemas/carts")
